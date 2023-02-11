@@ -1,0 +1,19 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: rhel-httpd-svc
+  namespace: rhel-httpd
+  labels:
+    app: rhel-httpd
+spec:
+  ports:
+  - name: http
+    port: 8080
+    protocol: TCP
+    targetPort: 8080
+  selector:
+    app: rhel-httpd
+  type: LoadBalancer
+  externalIPs:
+  - 192.168.39.149

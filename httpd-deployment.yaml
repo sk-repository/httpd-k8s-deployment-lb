@@ -1,0 +1,64 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rhel-httpd-deploy
+  labels:
+    app: rhel-httpd
+  namespace: rhel-httpd
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: rhel-httpd
+  template:
+    metadata:
+      name: rhel-httpd
+      labels:
+        app: rhel-httpd
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsUser: 1001
+        runAsNonRoot: true
+        runAsGroup: 1001
+        fsGroup: 1001
+      containers:
+      - name: rhel-httpd
+        image : registry.access.redhat.com/ubi9/httpd-24:1-242.1675794537
+        imagePullPolicy: Always
+        securityContext:
+          allowPrivilegeEscalation: false
+          privileged: false
+          seccompProfile:
+            type: RuntimeDefault
+        ports:
+        - name: http
+          containerPort: 8080
+        resources:
+          requests:
+            memory: "100Mi"
+            cpu: "200m"
+          limits:
+            memory: "200Mi"
+            cpu: "400m"
+        readinessProbe:
+          httpGet:
+            scheme: HTTP
+            path: /
+            port: http
+          initialDelaySeconds: 30
+          periodSeconds: 3
+        livenessProbe:
+          httpGet:
+            path: /
+            port: http
+          failureThreshold: 3
+          periodSeconds: 20
+        volumeMounts:
+        - name: config-volume
+          mountPath: /var/www/html/
+      volumes:
+      - name: config-volume
+        configMap:
+          name: default-site
